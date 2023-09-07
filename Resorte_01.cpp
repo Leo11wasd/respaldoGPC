@@ -21,7 +21,9 @@ float linea(float x){
 
 VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRodaja,float(*func)(float))
 {
-    float deltaTheta  = 8.0 * atan(1.0) / ( M_PuntosPorRodaja - 1 );
+
+    //M_PuntosPorRodaja--;
+    float deltaTheta  = 8.0 * atan(1.0) / ( M_PuntosPorRodaja);
     float deltaX = ( x_max - x_min ) / ( N_Rodajas -1 );
     float theta;
     float x,y,z;
@@ -52,38 +54,37 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
           vertices[pos ].y = y;
           vertices[pos].z = z;
 
-          vertices[pos].r =((double) rand() / (RAND_MAX+1));
-          vertices[pos].g = ((double) rand() / (RAND_MAX+1));
-          vertices[pos].b = ((double) rand() / (RAND_MAX+1));
+          vertices[pos].r =1.0f;//((double) rand() / (RAND_MAX+1));
+          vertices[pos].g = 0.0f;//((double) rand() / (RAND_MAX+1));
+          vertices[pos].b = 0.0f;//((double) rand() / (RAND_MAX+1));
           pos++;
         }
     }
-
+    float offset=1;
     //ponemos los vertices pivote para las tapas
-    x=x_min;
+    x=x_max+offset;
+    y=0;
+    z=0;
+    vertices[pos].x = x;
+    vertices[pos].y = y;
+    vertices[pos].z = z;
+
+    vertices[pos].r =1.0f;
+    vertices[pos].g =0.0f;
+    vertices[pos].b = 0.0f;
+    pos++;
+
+
+    x=x_min-offset;
     y=0;
     z=0;
     vertices[pos].x = x;
     vertices[pos ].y = y;
     vertices[pos].z = z;
 
-    vertices[pos].r =((double) rand() / (RAND_MAX+1));
-    vertices[pos].g = ((double) rand() / (RAND_MAX+1));
-    vertices[pos].b = ((double) rand() / (RAND_MAX+1));
-    pos++;
-
-
-    x=x_max+10;
-    y=0;
-    z=0;
-    vertices[pos].x = x;
-    vertices[pos ].y = y;
-    vertices[pos].z = z;
-
-    vertices[pos].r =((double) rand() / (RAND_MAX+1));
-    vertices[pos].g = ((double) rand() / (RAND_MAX+1));
-    vertices[pos].b = ((double) rand() / (RAND_MAX+1));
-    pos++;
+    vertices[pos].r =1.0f;
+    vertices[pos].g = 0.0f;
+    vertices[pos].b = 0.0f;
 
     return vertices;
 
@@ -180,8 +181,8 @@ int** generaCaras(int N_rodajas, int M_puntos) {
 
     c = 0;
 
-    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la última rodaja
-        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cálculos innecesarios
+    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la Ãºltima rodaja
+        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cÃ¡lculos innecesarios
             caras[c][0] = (k * M_puntos) + j;
 
             if(j==M_puntos-1){
@@ -221,8 +222,8 @@ int* generaCarasArr(int N_rodajas, int M_puntos) {
 
     c = 0;
 
-    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la última rodaja
-        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cálculos innecesarios
+    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la Ãºltima rodaja
+        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cÃ¡lculos innecesarios
             caras[c] = (k * M_puntos) + j;
             c++;
             if(j==M_puntos-1){
@@ -269,20 +270,19 @@ int* generaCarasArr(int N_rodajas, int M_puntos) {
 
 
 float funcion1(float a){
-    return a*a;
+    return 5;
 }
 
-/*
+
 int main()
 {
-    int M = 3;
+    int M = 4;
     int N = 2;
     float       a = 1.0f;
-    //VERTICE *v;
+    VERTICE *v;
     int k,s,i,j,total;
     total=(6*(M))+(6* M * (N - 1));
 
-    //v = creaSolRev2(1,10,M,N,*funcion1);
     int* cara;
     cara=generaCarasArr(N,M);
     for (int i=0;i<total;i++){
@@ -294,9 +294,10 @@ int main()
     std::cout << std::endl;
 
     delete[] cara;
-    //v = creaSolRev2(a,M,N_vueltas);
-    //for(k = 0; k < M*N; k++)
-      //printf("%d %10.6f %10.6f %10.6f , %f %f %f\n",k,v[k].x,v[k].y,v[k].z,v[k].r,v[k].g,v[k].b);
+
+    v = creaSolRev2(1,10,N,M,funcion1);
+    for(k = 0; k < (M*N)+2; k++)
+      printf("%d %10.6f %10.6f %10.6f , %f %f %f\n",k,v[k].x,v[k].y,v[k].z,v[k].r,v[k].g,v[k].b);
 
 
  //int rows =2 * M * (N - 1);
@@ -310,6 +311,6 @@ int main()
     //}
     return 0;
 }
-*/
+
 
 
