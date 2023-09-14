@@ -40,7 +40,7 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
         x     = x_min + k_rod * deltaX;
         r_yz  = func(x);
 
-        k_indice = k_rod * M_PuntosPorRodaja;
+        //k_indice = k_rod * M_PuntosPorRodaja;
 
         for(k_t = 0; k_t < M_PuntosPorRodaja; k_t++)
         {
@@ -51,7 +51,7 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
           //printf("%d %f %f %f \n",k_indice+k_t,x,y,z);
 
           vertices[pos].x = x;
-          vertices[pos ].y = y;
+          vertices[pos].y = y;
           vertices[pos].z = z;
 
           vertices[pos].r =1.0f;//((double) rand() / (RAND_MAX+1));
@@ -60,7 +60,7 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
           pos++;
         }
     }
-    float offset=1;
+    float offset=.1;
     //ponemos los vertices pivote para las tapas
     x=x_max+offset;
     y=0;
@@ -70,8 +70,8 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
     vertices[pos].z = z;
 
     vertices[pos].r =1.0f;
-    vertices[pos].g =0.0f;
-    vertices[pos].b = 0.0f;
+    vertices[pos].g =1.0f;
+    vertices[pos].b = 1.0f;
     pos++;
 
 
@@ -79,12 +79,12 @@ VERTICE *creaSolRev2(float x_min, float x_max, int N_Rodajas, int M_PuntosPorRod
     y=0;
     z=0;
     vertices[pos].x = x;
-    vertices[pos ].y = y;
+    vertices[pos].y = y;
     vertices[pos].z = z;
 
     vertices[pos].r =1.0f;
-    vertices[pos].g = 0.0f;
-    vertices[pos].b = 0.0f;
+    vertices[pos].g = 1.0f;
+    vertices[pos].b = 1.0f;
 
     return vertices;
 
@@ -172,17 +172,17 @@ VERTICE *creaSolRev(float radio, float x_min, float x_max, int N_Rodajas, int M_
 
 }
 int** generaCaras(int N_rodajas, int M_puntos) {
-    int k, j, c;
+    int k, j, c,i;
     int** caras = new int*[2 * M_puntos * (N_rodajas - 1)];
 
-    for (int i = 0; i < 2 * M_puntos * (N_rodajas - 1); i++) {
+    for (i = 0; i < 2 * M_puntos * (N_rodajas - 1); i++) {
         caras[i] = new int[3];
     }
 
     c = 0;
 
-    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la Ãºltima rodaja
-        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cÃ¡lculos innecesarios
+    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la última rodaja
+        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cálculos innecesarios
             caras[c][0] = (k * M_puntos) + j;
 
             if(j==M_puntos-1){
@@ -209,58 +209,70 @@ int** generaCaras(int N_rodajas, int M_puntos) {
         }
     }
 
-    return caras;
-}
-
-
-int* generaCarasArr(int N_rodajas, int M_puntos) {
-    int k,i, j, c,vertices_base,num_caras,extras;
-    num_caras=2* M_puntos * (N_rodajas - 1);// caras "rectangulares"
-    extras=6*(M_puntos);
-    vertices_base=3*num_caras ;
-    int* caras=new int[vertices_base+extras];
-
-    c = 0;
-
-    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la Ãºltima rodaja
-        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos - 1 para evitar cÃ¡lculos innecesarios
-            caras[c] = (k * M_puntos) + j;
-            c++;
-            if(j==M_puntos-1){
-                caras[c]=(k * M_puntos);
-            }
-            else{
-                caras[c] = (k * M_puntos) + j + 1;
-            }
-            c++;
-            caras[c] = ((k + 1) * M_puntos) + j;
-            c++;
-
-            caras[c] = (k * M_puntos) + j + 1;
-            c++;
-            if(j==M_puntos-1){
-                caras[c]=k * M_puntos;
-            }
-            else{
-                caras[c] = ((k + 1) * M_puntos) + j + 1;
-            }
-            c++;
-            caras[c] = ((k + 1) * M_puntos) + j;
-            c++;
-        }
-    }
-// juntar las tapas
+    // juntar las tapas
 
     for (i=0;i<2;i++){
             for (j=0;j<M_puntos;j++){
-                caras[c]=(N_rodajas*M_puntos)+i;//pivote
-                c++;
-                caras[c]=((j+1)%M_puntos)+(M_puntos*(N_rodajas-1)*i);
-                c++;
-                caras[c]=j+(M_puntos*(N_rodajas-1)*i);
+                caras[c][0]=(N_rodajas*M_puntos)+i;//pivote
+                caras[c][1]=((j+1)%M_puntos)+(M_puntos*(N_rodajas-1)*i);
+                caras[c][2]=j+(M_puntos*(N_rodajas-1)*i);
                 c++;
             }
+}
+    return caras;
+
+}
+
+
+int** generaCarasArr(int N_rodajas, int M_puntos,int num_caras) {
+    int k,i, j, c;
+    int** caras=new int*[num_caras];
+    for (i = 0; i < num_caras; i++) {
+        caras[i] = new int[3]; // Crear un arreglo de int de tamaño 3 para cada fila
     }
+    int prodact,prodnext,rodaja,rodnext;
+    int puntofinal=(M_puntos*N_rodajas)-1;
+    c = 0;
+
+    for (k = 0; k < N_rodajas - 1; k++) {  // El bucle debe ser N_rodajas - 1, ya que no necesitas calcular las caras de la última rodaja
+        for (j = 0; j < M_puntos ; j++) {  // Similarmente, M_puntos  para evitar cálculos innecesarios
+            rodaja=(k * M_puntos);
+            rodnext=((k+1) * M_puntos);
+            prodact=rodaja+j;
+            prodnext=rodnext+j;
+
+            caras[c][0] = prodact;
+            caras[c][1] = (prodact+ 1)%M_puntos;
+            caras[c][2] = prodnext;
+            c++;
+////////////////////////////////////////////////////////////
+
+            caras[c][0]=(prodact+1)%M_puntos;
+            if(prodact+M_puntos==puntofinal){
+                caras[c][1]=rodaja+M_puntos;
+            }
+            else{caras[c][1] = (prodnext + 1);
+
+            }
+            caras[c][2]=(prodnext);
+            c++;
+        }
+    }
+
+  //tapa de "enfrente"
+                for (j=0;j<M_puntos;j++){
+                caras[c][0]=(N_rodajas*M_puntos);//pivote
+                caras[c][1]=j;
+                caras[c][2]=((j+1)%M_puntos);
+                c++;
+                }
+  //tapa de "atras "
+                for (j=0;j<M_puntos;j++){
+                caras[c][0]=(N_rodajas*M_puntos)+1;//pivote
+                caras[c][1]=j+(M_puntos*(N_rodajas-1));
+                caras[c][2]=((j+1)%M_puntos)+(M_puntos*(N_rodajas-1));
+                c++;
+                }
     return caras;
 }
 
@@ -270,18 +282,18 @@ int* generaCarasArr(int N_rodajas, int M_puntos) {
 
 
 float funcion1(float a){
-    return 5;
+    return 0.5;
 }
 
-
+/*
 int main()
 {
-    int M = 4;
-    int N = 2;
+    int M_puntos_rodaja = 3;
+    int N_rodajas= 2;
     float       a = 1.0f;
     VERTICE *v;
     int k,s,i,j,total;
-    total=(6*(M))+(6* M * (N - 1));
+    total=(6* M_puntos_rodaja * (N_rodajas - 1))+ 6*M_puntos_rodaja;
 
     int* cara;
     cara=generaCarasArr(N,M);
@@ -295,10 +307,6 @@ int main()
 
     delete[] cara;
 
-    v = creaSolRev2(1,10,N,M,funcion1);
-    for(k = 0; k < (M*N)+2; k++)
-      printf("%d %10.6f %10.6f %10.6f , %f %f %f\n",k,v[k].x,v[k].y,v[k].z,v[k].r,v[k].g,v[k].b);
-
 
  //int rows =2 * M * (N - 1);
 //int cols =3;
@@ -311,6 +319,7 @@ int main()
     //}
     return 0;
 }
+*/
 
 
 
