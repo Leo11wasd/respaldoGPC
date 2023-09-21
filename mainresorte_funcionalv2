@@ -1,0 +1,250 @@
+// Este archivo contiene la función "main" para generar sólidos de revolución.
+// por RGGH
+// para GPC Gpo 02
+// 202303
+// ===========================================================================
+#include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#include "linmath.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+float a = 0.4f;
+
+#include"Resorte_03.cpp"
+
+static const char* vertex_shader_text =
+"#version 330 core\n"
+"uniform mat4 MVP;\n"
+"layout(location = 0) in vec3 vPos;\n"
+"layout(location = 1) in vec3 vCol;\n"
+"out vec3 color;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = MVP * vec4(vPos, 1.0);\n"
+"    color = vCol;\n"
+"}\0";
+
+static const char* fragment_shader_text =
+"#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec3 color;\n"
+"void main()\n"
+"{\n"
+"    FragColor = vec4(color, 1.0);\n"
+"}\n\0";
+
+static void error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Error: %s\n", description);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+static float radio = 1.0f;
+
+float func_circ( float x )
+{
+    return sqrt(radio * radio - x * x);
+}
+
+float func_const( float x )
+{
+    return a;
+}
+
+float func_parab( float x )
+{
+    return x * x + 0.02;
+}
+
+float func_sin( float x )
+{
+    return  0.5 * abs(sin( 3.14159 * x )) + 0.02;
+}
+
+
+int main(void)
+{
+    //int M_resorte         = 1000;
+    //int N_vueltas_resorte = 20;
+
+    int num_vertices;
+    int num_triangulos;
+    int num_indices;
+
+    int M_puntos_rodaja   = 20;
+    int N_rodajas         = 20;
+
+    //VERTICE *vertices = creaResorte(a,M_resorte,N_vueltas_resorte); num_vertices = M_resorte;
+    radio = 1.1f * a;
+
+    VERTICE *vertices = creaSolRev(func_const,1.1* a, -a,a,M_puntos_rodaja,N_rodajas);
+    //int **indices = creaIndices(M_puntos_rodaja,N_rodajas,&num_vertices,&num_triangulos); //num_vertices = M_puntos_rodaja * N_rodajas;
+    int *indices = creaIndicesArr(M_puntos_rodaja,N_rodajas,&num_vertices,&num_triangulos);
+    num_indices=num_triangulos*3;
+    /*
+    for(k = 0; k < M; k++)
+      printf("%d %10.6f %10.6f %10.6f , %f %f %f\n",k,vertices[k].x,vertices[k].y,vertices[k].z,vertices[k].r,vertices[k].g,vertices[k].b);
+    */
+
+	GLFWwindow* window;
+	GLuint  vertex_shader, fragment_shader, program;
+	unsigned int vertex_buffer,VAO,EBO;
+	GLint mvp_location, vpos_location, vcol_location;
+
+	glfwSetErrorCallback(error_callback);
+
+	if (!glfwInit())
+		exit(EXIT_FAILURE);
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+	window = glfwCreateWindow(640, 480, "Resorte-ronte 02", NULL, NULL);
+	if (!window)
+	{
+		glfwTerminate();
+		exit(EXIT_FAILURE);
+	}
+
+	glfwSetKeyCallback(window, key_callback);
+
+	glfwMakeContextCurrent(window);
+	gladLoadGL(glfwGetProcAddress);
+	glfwSwapInterval(1);
+
+	// NOTE: OpenGL error checks have been omitted for brevity
+
+
+    //SHADERS
+	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+	glCompileShader(vertex_shader);
+
+	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+	glCompileShader(fragment_shader);
+
+	program = glCreateProgram();
+	glAttachShader(program, vertex_shader);
+	glAttachShader(program, fragment_shader);
+	glLinkProgram(program);
+
+	mvp_location = glGetUniformLocation(program, "MVP");
+	vpos_location = glGetAttribLocation(program, "vPos");
+	vcol_location = glGetAttribLocation(program, "vCol");
+
+	//vpos
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // decia 2 y GL_FALSE
+		sizeof(vertices[0]), (void*)0);
+	//vcolor
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+		sizeof(vertices[0]), (void*)(sizeof(float) * 3)); // decia 2
+
+
+//BUFFERS
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &vertex_buffer);
+    glGenBuffers(1,&EBO);
+
+    glBindVertexArray(VAO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num_vertices*sizeof(VERTICE), vertices, GL_STATIC_DRAW);
+
+
+     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,num_indices*sizeof(indices[0]),indices,GL_STATIC_DRAW);
+
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); //vertices
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); //color
+
+    glEnableVertexAttribArray(0);
+
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+    //glFrontFace(GL_CCW);
+
+/*
+    //VERIFICACION VERTICES E INDICES
+    for(int i=0;i<num_vertices;i++){
+
+        std::cout<<vertices[i].x<<" , "<<vertices[i].y<<" , "<<vertices[i].z<<"\n";
+}
+
+std::cout<<"num_triangulos:"<<num_triangulos;
+
+for (int i=0;i<3*num_triangulos;i++){
+
+    std::cout<<indices[i][0]<<" , "<<indices[i][1]<<" , "<<indices[i][2]<<"\n";
+}
+*/
+
+std::cout<<"INDICES:"<<num_indices<<"\n";
+for(int k = 0; k < num_indices; k++){
+if(k%3==0){
+    std::cout<<"\n";
+}
+        std::cout<<indices[k]<<" , ";
+        //std::cout<<indices[k][0]<<" , "<<indices[k][1]<<" , "<<indices[k][2]<<"\n";
+}
+/*
+std::cout<<"VERTICES:"<<num_vertices<<"\n";
+for(int k = 0; k < num_vertices; k++){
+
+
+        std::cout<<vertices[k].x<<" , "<<vertices[k].y<<" , "<<vertices[k].z<<" , "<<"\n";
+        }
+*/
+	while (!glfwWindowShouldClose(window))
+	{
+		float ratio;
+		int width, height;
+		mat4x4 m, p, mvp;
+
+		glfwGetFramebufferSize(window, &width, &height);
+		ratio = width / (float)height;
+
+
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		mat4x4_identity(m);
+		mat4x4_rotate_X(m, m, (float)glfwGetTime());
+		//mat4x4_rotate_Y(m, m, (float)glfwGetTime());
+		mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+		mat4x4_mul(mvp, p, m);
+
+		glUseProgram(program);
+		glBindVertexArray(VAO);
+
+
+		glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+		//glDrawArrays(GL_POINTS , 0, num_vertices);//glDrawArrays(GL_LINE_STRIP , 0, M); //glDrawArrays(GL_LINE_LOOP , 0, 12); // glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES,num_indices,GL_UNSIGNED_INT,0);
+
+        //glBindVertexArray(0);
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwDestroyWindow(window);
+
+	glfwTerminate();
+	exit(EXIT_SUCCESS);
+}
