@@ -75,19 +75,27 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "uniform vec3 Luzpos;\n"
     "uniform vec4 colorLuz;\n"
     "uniform vec3 posCamara;\n"
+
+    "uniform float shinyness_mat;\n" //"shininess" del material
+    "uniform vec4 specular_mat;\n" //specular del material
+    "uniform vec4 difusa_mat;\n" //difusa del material 
+    "uniform vec4 ambiental_mat;\n" //ambiental del material
+
     "vec4 color_frag;\n"
     "void main()\n"
     "{\n"
+
     "float specularStrength=0.9;\n"
     "vec3 norm=normalize(Normales);\n"
     "vec3 lightDir= normalize(Luzpos-Posicion);\n"
 	"float diff = max(dot(norm, lightDir), 0.0);\n"
-    "vec4 Luzdifusa = diff * colorLuz;\n"
+    "vec4 Luzdifusa = diff * colorLuz * difusa_mat;\n"
 
     "vec3 viewDir = normalize(posCamara - Posicion);\n"
     "vec3 reflectDir = reflect(-lightDir, norm);\n"
-    "float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
-    "vec4 specular = specularStrength * spec * colorLuz;\n"
+    "float spec = pow(max(dot(viewDir, reflectDir), 0.0), shinyness_mat);\n"
+    "vec4 specular = specularStrength * spec * colorLuz * specular_mat;\n"
+    "ambiental = ambiental * ambiental_mat;\n"
 
 	"     color_frag = texture(texture1, TexCoord);\n"
 	"     FragColor = vec4(color_frag*(Luzdifusa+ambiental+specular));\n"
@@ -130,8 +138,30 @@ vec4 elcolor;
 vec4 ambiental;
 float radio_camara;
 
+//materiales
+
+vec4 specular_mat;
+vec4 ambiental_mat;
+vec4 difusa_mat;
+float shinyness;
+
 int main()
 {
+    ambiental_mat[0]=0.0215;
+    ambiental_mat[1]=0.1745;
+    ambiental_mat[2]=0.0215;
+    ambiental_mat[3]=1;
+
+    difusa_mat[0]=0.07568	;
+    difusa_mat[1]=0.61424;
+    difusa_mat[2]=0.07568;
+    difusa_mat[3]=1;
+
+    specular_mat[0]=0.633;
+    specular_mat[1]=0.727811;
+    specular_mat[2]=0.633;
+    specular_mat[3]=1;
+    
     elcolor[0] = 1.f;
     elcolor[1] = 1.f;
     elcolor[2] = 1.f;
@@ -159,7 +189,8 @@ int main()
     radio_camara = vec3_len(radio_vector);
 
     GLint mvp_location,posCamara_location,mw_location, mvp_ejes_location, mvp_cuboLuz_location,
-          el_color_location, vpos_location, vcol_location,ambiental_location, luzpos_location,colorluz_location;
+          el_color_location, vpos_location, vcol_location,ambiental_location, luzpos_location,
+          colorluz_location,specular_mat_location,shiny_mat_location,ambiental_mat_location;
 
     // glfw: initialize and configure
     // ------------------------------
@@ -248,6 +279,11 @@ int main()
     luzpos_location=glGetUniformLocation(shaderProgram,"Luzpos");
     posCamara_location=glGetUniformLocation(shaderProgram,"posCamara");
     colorluz_location=glGetUniformLocation(shaderProgram,"colorLuz");
+    specular_mat_location=glGetUniformLocation(shaderProgram,"specular_mat");
+    ambiental_mat_location=glGetUniformLocation(shaderProgram,"ambiental_mat");
+
+    shiny_mat_location=glGetUniformLocation(shaderProgram,"shinyness_mat");
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
@@ -459,7 +495,7 @@ int main()
       glBindBuffer(GL_ARRAY_BUFFER, VBO_prisma);
       glBufferData(GL_ARRAY_BUFFER, num_vertices_prisma*sizeof(VERTICE_TEX_NOR), vertices_prisma, GL_STATIC_DRAW);
 
-      //posición del vertice(x,y,z)
+      //posiciï¿½n del vertice(x,y,z)
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VERTICE_TEX_NOR), (void*)0);
       glEnableVertexAttribArray(0);
 
@@ -669,7 +705,7 @@ int main()
     stbi_image_free(data);
 
     // ----------------------------
-    //      fin de carga y definición de texturas
+    //      fin de carga y definiciï¿½n de texturas
     // ----------------------------
 
     // render loop
@@ -716,7 +752,7 @@ int main()
 		//mat4x4_ortho( p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
 		//mat4x4_mul(mvp, p, m);
 
-		float tr_x[4] = { 0.3f, -0.3f,   0.5f,  5.f}; // el último es el cubo de luz
+		float tr_x[4] = { 0.3f, -0.3f,   0.5f,  5.f}; // el ï¿½ltimo es el cubo de luz
 		float tr_y[4] = { 0.3f, -0.3f,   0.5f,  0.f};
 		float tr_z[4] = {-10.0f, -5.0f, -8.0f, -5.f};
         float posluz[3];
@@ -778,8 +814,8 @@ int main()
               glUniformMatrix4fv(mw_location, 1, GL_FALSE, (const GLfloat*)mw);
               glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
               glUniform4fv(ambiental_location, 1, (const GLfloat*)ambiental);
-              glUniform4fv(luzpos_location,1,(const GLfloat*) posluz);
-              glUniform4fv(posCamara_location,1,(const GLfloat*)eye);
+              //glUniform4fv(luzpos_location,1,(const GLfloat*) posluz);
+              //glUniform4fv(posCamara_location,1,(const GLfloat*)eye);
               glUniform4fv(colorluz_location,1,(const GLfloat*)elcolor);
 
 
